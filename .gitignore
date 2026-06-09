@@ -56,3 +56,8 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Gas Town / beads runtime and agent-context artifacts (not project code)
+.beads/
+.runtime/
+CLAUDE.md
