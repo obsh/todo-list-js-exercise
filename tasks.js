@@ -1,6 +1,12 @@
-// Single source of truth: every task is one object { id, title, complete }.
-// Tasks live in this array; ids are assigned from a monotonic counter so an
-// id stays stable for a task's lifetime and is never reused after deletion.
+// Task data layer: the single source of truth for todo state.
+//
+// Every task is one object { id, title, complete }. Tasks live in this array;
+// ids are assigned from a monotonic counter so an id stays stable for a task's
+// lifetime and is never reused after deletion.
+//
+// This module is pure data logic — no I/O. Both the CLI (cli.js) and the test
+// suite import it. Persistence to disk is intentionally out of scope here
+// (that is Phase 4); state lives only for the lifetime of the process.
 const tasks = [];
 let nextId = 1;
 
@@ -57,14 +63,6 @@ function listTasks() {
   return [...tasks];
 }
 
-// Print the state of a task to the console in a nice readable way.
-function logTaskState(id) {
-  const task = getTask(id);
-  const status = task.complete ? " " : " not ";
-  console.log(`#${task.id} ${task.title} has${status}been completed`);
-}
-
-// Export the data layer so Phase 2 can unit-test these operations.
 module.exports = {
   newTask,
   getTask,
@@ -72,36 +70,3 @@ module.exports = {
   deleteTask,
   listTasks,
 };
-
-// DRIVER CODE BELOW — exercises add/complete/delete/list. Only runs when this
-// file is executed directly (node index.js), not when required by tests.
-if (require.main === module) {
-  const litter = newTask("Clean Cat Litter");
-  const laundry = newTask("Do Laundry");
-  const dishes = newTask("Wash Dishes");
-
-  console.log("Initial tasks:");
-  logTaskState(litter.id); // not completed
-  logTaskState(laundry.id); // not completed
-  logTaskState(dishes.id); // not completed
-
-  console.log("\nCompleting 'Clean Cat Litter'...");
-  completeTask(litter.id);
-  logTaskState(litter.id); // completed
-
-  console.log("\nDeleting 'Do Laundry'...");
-  deleteTask(laundry.id);
-
-  console.log("\nRemaining tasks:");
-  for (const task of listTasks()) {
-    const status = task.complete ? "done" : "todo";
-    console.log(`  [${status}] #${task.id} ${task.title}`);
-  }
-
-  console.log("\nValidation: completing a non-existent task throws...");
-  try {
-    completeTask(999);
-  } catch (error) {
-    console.log(`  caught expected error: ${error.message}`);
-  }
-}

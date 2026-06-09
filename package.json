@@ -1,10 +1,13 @@
 {
   "name": "todo-list",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Interactive todo CLI with an in-memory task data layer",
+  "main": "tasks.js",
+  "bin": {
+    "todo": "cli.js"
+  },
   "scripts": {
-    "start": "node index.js",
+    "start": "node cli.js",
     "test": "vitest run"
   },
   "author": "",

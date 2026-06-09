@@ -1,11 +1,10 @@
-// Unit tests for the task data layer in index.js.
+// Unit tests for the task data layer in tasks.js.
 //
-// State isolation: index.js keeps module-level `tasks`/`nextId` that persist
+// State isolation: tasks.js keeps module-level `tasks`/`nextId` that persist
 // across calls. To stop state bleeding between cases, each test starts from a
 // fresh copy of the module. `vi.resetModules()` clears the module cache and we
-// re-import index.js in beforeEach, so every test gets brand-new `tasks`/
-// `nextId`. The require.main guard in index.js means the driver code never runs
-// during these imports.
+// re-import tasks.js in beforeEach, so every test gets brand-new `tasks`/
+// `nextId`.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,7 +16,7 @@ let listTasks;
 
 beforeEach(async () => {
   vi.resetModules();
-  const todo = await import("./index.js");
+  const todo = await import("./tasks.js");
   ({ newTask, getTask, completeTask, deleteTask, listTasks } = todo.default);
 });
 
