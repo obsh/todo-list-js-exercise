@@ -1,0 +1,154 @@
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #f6f7f9;
+  color: #1f2933;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  padding: 48px 16px;
+}
+
+.app {
+  width: min(720px, 100%);
+}
+
+.app__header {
+  margin-bottom: 24px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+  color: #52606d;
+}
+
+.task-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+input,
+button {
+  min-height: 44px;
+  border-radius: 8px;
+  font: inherit;
+}
+
+input {
+  border: 1px solid #cbd2d9;
+  padding: 0 14px;
+  background: #ffffff;
+}
+
+input:focus {
+  outline: 3px solid #b3d4ff;
+  border-color: #3b82f6;
+}
+
+button {
+  border: 0;
+  padding: 0 16px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button:disabled {
+  background: #9aa5b1;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #f3b5b5;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #a61b1b;
+}
+
+.task-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.task__status {
+  color: #52606d;
+  font-variant-numeric: tabular-nums;
+}
+
+.task__title {
+  overflow-wrap: anywhere;
+}
+
+.task--complete .task__title {
+  color: #7b8794;
+  text-decoration: line-through;
+}
+
+.task__secondary {
+  background: #e4e7eb;
+  color: #243b53;
+}
+
+.task__secondary:hover {
+  background: #cbd2d9;
+}
+
+@media (max-width: 520px) {
+  body {
+    padding-top: 24px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .task-form,
+  .task {
+    grid-template-columns: 1fr;
+  }
+
+  .task__status {
+    justify-self: start;
+  }
+}
