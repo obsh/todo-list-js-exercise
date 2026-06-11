@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 import cli from "./cli.js";
 
-const { parseLine, formatTask, formatList } = cli;
+const { parseLine, formatTask, formatList, dispatch } = cli;
 
 describe("parseLine", () => {
   it("splits a command from its argument", () => {
@@ -64,5 +64,33 @@ describe("formatList", () => {
       { id: 2, title: "B", complete: true },
     ]);
     expect(out).toBe("[ ] #1 A\n[x] #2 B");
+  });
+});
+
+describe("dispatch", () => {
+  it("runs the mutation callback after adding a task", () => {
+    const out = [];
+    let mutationCount = 0;
+
+    dispatch("add", "Persist me", (msg) => out.push(msg), {
+      afterMutation: () => {
+        mutationCount += 1;
+      },
+    });
+
+    expect(mutationCount).toBe(1);
+    expect(out[0]).toMatch(/^Added \[ \] #\d+ Persist me$/);
+  });
+
+  it("does not run the mutation callback for read-only commands", () => {
+    let mutationCount = 0;
+
+    dispatch("list", "", () => {}, {
+      afterMutation: () => {
+        mutationCount += 1;
+      },
+    });
+
+    expect(mutationCount).toBe(0);
   });
 });

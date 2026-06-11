@@ -57,6 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Todo CLI persistence file
+tasks.json
+
 # Gas Town / beads runtime and agent-context artifacts (not project code)
 .beads/
 .runtime/

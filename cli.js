@@ -12,9 +12,11 @@
 // reimplements task logic, it only parses input and renders output.
 
 const readline = require("readline");
+const path = require("path");
 const store = require("./tasks");
 
 const PROMPT = "todo> ";
+const DEFAULT_DATA_FILE = path.join(process.cwd(), "tasks.json");
 
 const HELP = `Commands:
   add <title>     Add a new task
@@ -66,13 +68,21 @@ function parseId(arg) {
   return Number.parseInt(arg, 10);
 }
 
+function getDataFile() {
+  return process.env.TODO_FILE || DEFAULT_DATA_FILE;
+}
+
 // Execute a single parsed command against the data layer. `out` is the sink for
-// user-facing lines (console.log in production, captured in tests). Returns
-// `true` when the caller should keep the REPL running, `false` to quit.
+// user-facing lines (console.log in production, captured in tests). `options`
+// may provide an `afterMutation` callback used by the REPL to persist state.
+// Returns `true` when the caller should keep the REPL running, `false` to quit.
 //
 // Every data-layer call that can throw (unknown id, empty title) is guarded so
 // the user sees a clear message instead of a raw stack trace.
-function dispatch(command, arg, out) {
+function dispatch(command, arg, out, options = {}) {
+  const afterMutation =
+    typeof options.afterMutation === "function" ? options.afterMutation : null;
+
   switch (command) {
     case "":
       return true;
@@ -83,6 +93,9 @@ function dispatch(command, arg, out) {
         return true;
       }
       const task = store.newTask(arg);
+      if (afterMutation) {
+        afterMutation();
+      }
       out(`Added ${formatTask(task)}`);
       return true;
     }
@@ -99,6 +112,9 @@ function dispatch(command, arg, out) {
       }
       try {
         const task = store.completeTask(id);
+        if (afterMutation) {
+          afterMutation();
+        }
         out(`Completed ${formatTask(task)}`);
       } catch {
         out(`No task with id ${id}`);
@@ -114,6 +130,9 @@ function dispatch(command, arg, out) {
       }
       try {
         const task = store.deleteTask(id);
+        if (afterMutation) {
+          afterMutation();
+        }
         out(`Deleted ${formatTask(task)}`);
       } catch {
         out(`No task with id ${id}`);
@@ -139,6 +158,14 @@ function dispatch(command, arg, out) {
 // parsed and dispatched; when dispatch signals quit (or input closes), the loop
 // shuts down cleanly.
 function startRepl() {
+  const dataFile = getDataFile();
+  try {
+    store.loadTasks(dataFile);
+  } catch (error) {
+    console.error(`Could not load tasks from ${dataFile}: ${error.message}`);
+    process.exit(1);
+  }
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -150,7 +177,9 @@ function startRepl() {
 
   rl.on("line", (line) => {
     const { command, arg } = parseLine(line);
-    const keepGoing = dispatch(command, arg, (msg) => console.log(msg));
+    const keepGoing = dispatch(command, arg, (msg) => console.log(msg), {
+      afterMutation: () => store.saveTasks(dataFile),
+    });
     if (!keepGoing) {
       rl.close();
       return;
@@ -164,7 +193,14 @@ function startRepl() {
   });
 }
 
-module.exports = { parseLine, formatTask, formatList, dispatch, startRepl };
+module.exports = {
+  parseLine,
+  formatTask,
+  formatList,
+  dispatch,
+  startRepl,
+  getDataFile,
+};
 
 if (require.main === module) {
   startRepl();

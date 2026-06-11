@@ -7,17 +7,30 @@
 // `nextId`.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 let newTask;
 let getTask;
 let completeTask;
 let deleteTask;
 let listTasks;
+let loadTasks;
+let saveTasks;
 
 beforeEach(async () => {
   vi.resetModules();
   const todo = await import("./tasks.js");
-  ({ newTask, getTask, completeTask, deleteTask, listTasks } = todo.default);
+  ({
+    newTask,
+    getTask,
+    completeTask,
+    deleteTask,
+    listTasks,
+    loadTasks,
+    saveTasks,
+  } = todo.default);
 });
 
 describe("newTask", () => {
@@ -119,5 +132,49 @@ describe("listTasks", () => {
     const snapshot = listTasks();
     snapshot.push({ id: 99, title: "Injected", complete: false });
     expect(listTasks()).toHaveLength(1);
+  });
+});
+
+describe("JSON persistence", () => {
+  function tempFile() {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "todo-list-"));
+    return path.join(dir, "tasks.json");
+  }
+
+  it("saves tasks and reloads them into a fresh module instance", async () => {
+    const file = tempFile();
+    newTask("A");
+    completeTask(1);
+    deleteTask(newTask("B").id);
+    const c = newTask("C");
+    saveTasks(file);
+
+    vi.resetModules();
+    const fresh = (await import("./tasks.js")).default;
+    expect(fresh.loadTasks(file)).toBe(true);
+    expect(fresh.listTasks()).toEqual([
+      { id: 1, title: "A", complete: true },
+      { id: 3, title: "C", complete: false },
+    ]);
+    expect(fresh.newTask("D").id).toBe(c.id + 1);
+  });
+
+  it("starts empty when the persistence file does not exist", () => {
+    const file = tempFile();
+    newTask("Before load");
+
+    expect(loadTasks(file)).toBe(false);
+    expect(listTasks()).toEqual([]);
+    expect(newTask("After load").id).toBe(1);
+  });
+
+  it("rejects corrupt persisted task data", () => {
+    const file = tempFile();
+    fs.writeFileSync(
+      file,
+      JSON.stringify({ nextId: 2, tasks: [{ id: 2, title: "", complete: false }] }),
+    );
+
+    expect(() => loadTasks(file)).toThrow(/invalid title/);
   });
 });
